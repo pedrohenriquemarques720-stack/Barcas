@@ -1,0 +1,34 @@
+-- Criar tabela de pedidos
+CREATE TABLE pedidos (
+    id BIGSERIAL PRIMARY KEY,
+    data_hora TIMESTAMP DEFAULT NOW(),
+    nome_cliente TEXT NOT NULL,
+    tipo_cliente TEXT NOT NULL CHECK (tipo_cliente IN ('PF', 'PJ')),
+    documento TEXT NOT NULL,
+    itens_pedido JSONB NOT NULL,
+    valor_total DECIMAL(10,2) NOT NULL,
+    status TEXT DEFAULT 'Pendente' CHECK (status IN ('Pendente', 'Preparando', 'Entregue')),
+    categoria TEXT NOT NULL CHECK (categoria IN ('Fixo', 'Variável')),
+    observacoes TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Criar índices para melhor performance
+CREATE INDEX idx_pedidos_status ON pedidos(status);
+CREATE INDEX idx_pedidos_data_hora ON pedidos(data_hora);
+CREATE INDEX idx_pedidos_tipo_cliente ON pedidos(tipo_cliente);
+
+-- Criar política de segurança (RLS)
+ALTER TABLE pedidos ENABLE ROW LEVEL SECURITY;
+
+-- Permitir leitura para todos
+CREATE POLICY "Permitir leitura para todos" ON pedidos
+    FOR SELECT USING (true);
+
+-- Permitir inserção para todos
+CREATE POLICY "Permitir inserção para todos" ON pedidos
+    FOR INSERT WITH CHECK (true);
+
+-- Permitir atualização apenas para usuários autenticados (opcional)
+CREATE POLICY "Permitir atualização para usuários autenticados" ON pedidos
+    FOR UPDATE USING (auth.role() = 'authenticated');
